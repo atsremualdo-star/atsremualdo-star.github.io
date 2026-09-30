@@ -17,11 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Instalar Chromium
-        run: npx --yes playwright@1.55.0 install --with-deps chromium
+      - name: Instalar Playwright e Chromium
+        run: |
+          npm install --no-save playwright@1.55.0
+          npx playwright install --with-deps chromium
       - name: Gerar PDF
         run: |
-          cat > /tmp/pdf.mjs <<'EOF'
+          cat > pdf.mjs <<'EOF'
           import { chromium } from 'playwright';
           import path from 'path';
           const browser = await chromium.launch({headless:true});
@@ -30,7 +32,7 @@ jobs:
           await page.pdf({path:'Curriculo_Remualdo_Maciel.pdf',format:'A4',printBackground:true,margin:{top:'0mm',right:'0mm',bottom:'0mm',left:'0mm'}});
           await browser.close();
           EOF
-          node /tmp/pdf.mjs
+          node pdf.mjs
       - name: Garantir botão de currículo no portfólio
         run: |
           python3 - <<'PY'
