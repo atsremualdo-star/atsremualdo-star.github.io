@@ -31,11 +31,23 @@ jobs:
           await browser.close();
           EOF
           node /tmp/pdf.mjs
-      - name: Publicar PDF atualizado
+      - name: Garantir botão de currículo no portfólio
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('index.html')
+          s=p.read_text()
+          if 'Curriculo_Remualdo_Maciel.pdf' not in s:
+              alvo='<a class="btn primary" href="#cases">Ver projetos e resultados</a>'
+              novo=alvo+'<a class="btn" href="Curriculo_Remualdo_Maciel.pdf" download>Baixar currículo (PDF)</a>'
+              s=s.replace(alvo,novo,1)
+              p.write_text(s)
+          PY
+      - name: Publicar currículo atualizado
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add Curriculo_Remualdo_Maciel.pdf
+          git add Curriculo_Remualdo_Maciel.pdf index.html
           git diff --cached --quiet && exit 0
-          git commit -m 'chore: atualizar currículo PDF [skip ci]'
+          git commit -m 'chore: atualizar currículo PDF e link [skip ci]'
           git push
