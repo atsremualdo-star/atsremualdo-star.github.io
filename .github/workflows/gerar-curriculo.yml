@@ -1,0 +1,41 @@
+name: Gerar currículo PDF
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'curriculo.html'
+      - '.github/workflows/gerar-curriculo.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  gerar-pdf:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Instalar Chromium
+        run: npx --yes playwright@1.55.0 install --with-deps chromium
+      - name: Gerar PDF
+        run: |
+          cat > /tmp/pdf.mjs <<'EOF'
+          import { chromium } from 'playwright';
+          import path from 'path';
+          const browser = await chromium.launch({headless:true});
+          const page = await browser.newPage();
+          await page.goto('file://' + path.resolve('curriculo.html'), {waitUntil:'networkidle'});
+          await page.pdf({path:'Curriculo_Remualdo_Maciel.pdf',format:'A4',printBackground:true,margin:{top:'0mm',right:'0mm',bottom:'0mm',left:'0mm'}});
+          await browser.close();
+          EOF
+          node /tmp/pdf.mjs
+      - name: Publicar PDF atualizado
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add Curriculo_Remualdo_Maciel.pdf
+          git diff --cached --quiet && exit 0
+          git commit -m 'chore: atualizar currículo PDF [skip ci]'
+          git push
